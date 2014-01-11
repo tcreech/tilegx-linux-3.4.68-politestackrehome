@@ -2612,14 +2612,11 @@ static int do_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
 
          /*
           * Don't rehome to the local cpu if the page is part of another
-          * thread's stack. Hopefully by doing nothing we are leaving it homed
-          * at their local cpu.
+          * thread's stack.
           */
          if(likely(!stackof || stackof == current->pid)){
             homecache_home_page_here(old_page, 0,
                   vma->vm_page_prot);
-         }else{
-            printk("not rehoming another thread's stack!\n");
          }
 
 			page_table = pte_offset_map_lock(mm, pmd, address,
