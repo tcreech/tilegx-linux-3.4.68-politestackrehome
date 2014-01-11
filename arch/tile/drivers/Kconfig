@@ -1,0 +1,67 @@
+config TILE_MEMPROF
+	bool "Memory profiling support in /proc/tile/memprof"
+	default y
+	---help---
+	  This device provides real-time information on memory utilization,
+	  latency, etc.
+
+config TILE_BME_MEM
+	bool "Bare-Metal Environment memory-sharing interface"
+	default y
+	---help---
+	  This device allows sharing memory between a BME application
+	  running on some of the cores and Linux on other cores,
+	  typically via /dev/bme/mem.
+
+config TILE_IORPC
+	tristate "Tilera user-space device access support"
+	default y
+	depends on TILEGX
+	---help---
+	  This kernel driver is required to support direct access
+	  to TILE-Gx hardware from user space, via the gxio library.
+
+config TILEPCI_ENDP
+	tristate "Tilera PCIE Endpoint Channel Driver"
+	default y
+	---help---
+	  This device is required on Tilera PCI cards; the driver
+	  allows Tilera Linux on the chip to communicate with the
+	  Intel Linux running on the host.
+
+config TILEPCI_STREAMIO
+	tristate "Tilera StreamIO Driver"
+	default n
+	---help---
+	  This driver is responsible for managing the StreamIO links
+	  that connect to FPGA devices.
+
+config TILEPCI_HOST_SUBSET
+	tristate "Minimal host driver for connecting Tile endpoints"
+	default m
+	depends on PCI
+	---help---
+	  Allows a root complex PCIe port to communicate with Tile endpoints.
+
+config TILE_I2CS
+	bool "Tilera I2C Slave interface driver"
+	default n
+	depends on TILEGX && TILE_GXIO && TILE_GXIO_I2CS
+	---help---
+	  This is a driver for the Tilera I2C Slave interface.
+
+config TILE_TMFIFO
+	tristate "Character-device access to the Tilera tile-monitor FIFO"
+	default y
+	depends on TILEGX
+	---help---
+	  This device supports communication with an external controller
+	  via the tile-monitor FIFO hardware.
+
+config TILE_PKA
+	tristate "Character-device access to the Tilera Public Key Accelerator"
+	default y
+	depends on TILEGX
+	---help---
+	  This device supports access to the hardware accelerator for
+	  mathematical operations related to public key cryptography.

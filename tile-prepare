@@ -1,0 +1,63 @@
+#!/bin/sh -e
+
+# Prepare a build directory for the standard Tilera Linux.
+#
+# Please consult the System Programmer's Guide for more information
+# on configuring and building Linux.
+#
+# This script normally copies the default Tilera config file
+# (from arch/tile/configs/${ARCH}_defconfig).
+
+# Verify the "install" directory.
+if [ -n "$TILERA_ROOT" ]; then
+    if [ ! -f "$TILERA_ROOT"/bin/tile-gcc ]; then
+	echo "TILERA_ROOT must point to a per-chip hierarchy of an MDE install tree." >&2
+	exit 1
+    fi
+    ARCH=`$TILERA_ROOT/bin/tile-gcc -dumpmachine | sed 's/-.*//'`
+else
+    ARCH=`uname -m`
+    case "$ARCH" in
+	tile*) ;;
+	*) echo "TILERA_ROOT not set in environment." >&2; exit 1 ;;
+    esac
+fi
+
+# Figure out which file versions we want to use.
+case $ARCH in
+tile|tilegx*) ARCH=tilegx; BITS=64 ;;
+tilepro) BITS=32 ;;
+*) echo "$0: bad tile arch '$ARCH'" >&2; exit 1 ;;
+esac
+
+# Verify the "source" directory.
+src=${0%/tile-prepare}
+config=arch/tile/configs/${ARCH}_defconfig
+product=Linux
+if [ ! -f $src/$config ]; then
+    echo "$0 is not in a $product source directory." >&2
+    exit 1
+fi
+
+# Verify the "build" directory.
+build=`pwd`
+if [ -f $config ]; then
+    echo "$0 must not be run in the $product source directory." >&2
+    echo "Please create a new empty directory to build in, then run" >&2
+    echo "  $build/tile-prepare" >&2
+    echo "from within that directory." >&2
+    exit 1
+fi
+
+if [ ! -f .config ]; then
+    echo "Copying default $BITS-bit .config from $src"
+    cat $src/$config >.config
+    echo "Running 'make ARCH=$ARCH oldnoconfig > make-oldconfig.out'"
+    make ARCH=$ARCH -C $src O=$build oldnoconfig \
+	> make-oldconfig.out < /dev/null
+else
+    echo "Note: not overwriting pre-existing .config file."
+fi
+
+echo ""
+echo "To build $product, just run 'make' in this directory."
