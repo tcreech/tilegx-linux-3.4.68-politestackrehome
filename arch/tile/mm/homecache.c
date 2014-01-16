@@ -1226,6 +1226,39 @@ struct page *homecache_alloc_page_vma(gfp_t gfp_mask,
 	}
 }
 
+struct page *homecache_alloc_page_vma_as(gfp_t gfp_mask,
+				      struct vm_area_struct *vma,
+				      unsigned long addr, int newhome)
+{
+	pgprot_t prot = vma->vm_page_prot;
+	if (!pte_get_forcecache(prot)) {
+		return alloc_page_vma(gfp_mask, vma, addr);
+	} else {
+		struct page *page;
+		int home = newhome;
+
+		home = homecache_get_desired_home(home, prot, 1);
+		PUSH_DESIRED_HOME(home);
+		page = alloc_page_vma(gfp_mask, vma, addr);
+		POP_DESIRED_HOME();
+		if (page == NULL)
+			return NULL;
+		check_page_home(page, home);
+
+		/*
+		 * If we are allocating a page with noalloc attributes,
+		 * we should ensure it starts with a clean local cache.
+		 * Normal coherence won't necessarily have flushed the
+		 * local cache.
+		 */
+		if (hv_pte_get_no_alloc_l2(prot) ||
+		    hv_pte_get_no_alloc_l1(prot))
+			homecache_finv_page(page);
+
+		return page;
+	}
+}
+
 void __homecache_free_pages(struct page *page, unsigned int order)
 {
 	__free_pages(page, order);

@@ -2562,6 +2562,9 @@ static int do_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	int ret = 0;
 	int page_mkwrite = 0;
 	struct page *dirty_page = NULL;
+	int stackof = 0;
+
+	stackof = vm_is_stack(current, vma, 1);
 
 	old_page = vm_normal_page(vma, address, orig_pte);
 	if (!old_page) {
@@ -2605,19 +2608,17 @@ static int do_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
 			 * page, since we change the PTE, but it seems
 			 * like the cleanest thing to do here.
 			 */
-         pid_t stackof;
 			page_cache_get(old_page);
 			pte_unmap_unlock(page_table, ptl);
-         stackof = vm_is_stack(current, vma, 1);
 
-         /*
-          * Don't rehome to the local cpu if the page is part of another
-          * thread's stack.
-          */
-         if(likely(!stackof || stackof == current->pid)){
-            homecache_home_page_here(old_page, 0,
-                  vma->vm_page_prot);
-         }
+			/*
+			 * Don't rehome to the local cpu if the page is part of another
+			 * thread's stack.
+			 */
+			if(likely(!stackof || stackof == current->pid)){
+				homecache_home_page_here(old_page, 0,
+						vma->vm_page_prot);
+			}
 
 			page_table = pte_offset_map_lock(mm, pmd, address,
 							 &ptl);
@@ -2782,8 +2783,14 @@ gotten:
 			goto oom;
 	} else {
 #ifdef CONFIG_HOMECACHE
-		new_page = homecache_alloc_page_vma(GFP_HIGHUSER_MOVABLE,
-						    vma, address);
+		int oldhome = page_home(old_page);
+
+		if(unlikely(stackof && stackof != current->pid))
+			new_page = homecache_alloc_page_vma_as(GFP_HIGHUSER_MOVABLE,
+					vma, address, oldhome);
+		else
+			new_page = homecache_alloc_page_vma(GFP_HIGHUSER_MOVABLE,
+					vma, address);
 #else
 		new_page = alloc_page_vma(GFP_HIGHUSER_MOVABLE, vma, address);
 #endif

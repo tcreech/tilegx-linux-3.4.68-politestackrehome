@@ -142,6 +142,13 @@ struct page *homecache_alloc_page_vma(gfp_t gfp, struct vm_area_struct *vma,
 				      unsigned long addr);
 
 /*
+ * Allocate a page intended for user-space with the requested homecaching.
+ * (Maybe.)
+ */
+struct page *homecache_alloc_page_vma_as(gfp_t gfp, struct vm_area_struct *vma,
+				      unsigned long addr, int newhome);
+
+/*
  * Regenerate a PTE that has been migrated by taking the vm_page_prot
  * values for caching and the PTE's own read/write/access/dirty bits,
  * then rewriting the PTE.  This will cause various components (e.g.
