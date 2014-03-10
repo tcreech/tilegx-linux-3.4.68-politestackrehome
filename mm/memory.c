@@ -2783,9 +2783,9 @@ gotten:
 			goto oom;
 	} else {
 #ifdef CONFIG_HOMECACHE
-      int stackof = 0;
+		int stackof = 0;
 		int oldhome = page_home(old_page);
-      stackof = vm_is_stack(current, vma, 1);
+		stackof = vm_is_stack(current, vma, 1);
 
 		if(unlikely(stackof && stackof != current->pid))
 			new_page = homecache_alloc_page_vma_as(GFP_HIGHUSER_MOVABLE,
