@@ -2597,8 +2597,8 @@ static int do_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
 		}
 		if (reuse_swap_page(old_page)) {
 #ifdef CONFIG_HOMECACHE
-         int stackof = 0;
-         stackof = vm_is_stack(current, vma, 1);
+			int stackof = 0;
+			stackof = vm_is_stack(current, vma, 1);
 
 			/*
 			 * Make sure our newly-owned page's home cache is
