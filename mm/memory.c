@@ -2562,9 +2562,6 @@ static int do_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	int ret = 0;
 	int page_mkwrite = 0;
 	struct page *dirty_page = NULL;
-	int stackof = 0;
-
-	stackof = vm_is_stack(current, vma, 1);
 
 	old_page = vm_normal_page(vma, address, orig_pte);
 	if (!old_page) {
@@ -2600,6 +2597,9 @@ static int do_wp_page(struct mm_struct *mm, struct vm_area_struct *vma,
 		}
 		if (reuse_swap_page(old_page)) {
 #ifdef CONFIG_HOMECACHE
+         int stackof = 0;
+         stackof = vm_is_stack(current, vma, 1);
+
 			/*
 			 * Make sure our newly-owned page's home cache is
 			 * on the local cpu.  We have to release the page
@@ -2783,7 +2783,9 @@ gotten:
 			goto oom;
 	} else {
 #ifdef CONFIG_HOMECACHE
+      int stackof = 0;
 		int oldhome = page_home(old_page);
+      stackof = vm_is_stack(current, vma, 1);
 
 		if(unlikely(stackof && stackof != current->pid))
 			new_page = homecache_alloc_page_vma_as(GFP_HIGHUSER_MOVABLE,
